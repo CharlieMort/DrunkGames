@@ -1,0 +1,62 @@
+body {
+    background-color: #111;
+    color: white;
+    font-family: monospace;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    margin: 0;
+}
+
+.App {
+    width: 90vw;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    background-color: #333;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.panel-top {
+    text-align: center;
+    font-size: 1.25rem;
+    text-decoration: underline;
+}
+
+.panel-top > h2 {
+    margin: 0.25rem 0 1.5rem 0;
+}
+
+.panel-bot {
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-bot > label {
+    font-size: 1.25rem;
+    margin: 0.5rem 0 0.5rem 0;
+    text-align: center;
+}
+
+.bigTextInput {
+    background-color: #222;
+    border: 1px solid rgb(0, 128, 255);
+    border-radius: 1rem;
+    font-size: 1rem;
+    padding: 0.5rem;
+    color: white;
+}
+
+.bigButton {
+    background-color: #09f;
+    border-radius: 1rem;
+    padding: 0.25rem 0.25rem;
+    color: #111;
+    font-size: 1.5rem;
+    margin: 1rem;
+}
