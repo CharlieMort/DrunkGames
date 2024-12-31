@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-const PORT = ":8081"
+const PORT = ":8000"
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -35,11 +35,8 @@ func main() {
 	hub := NewHub()
 	go hub.run()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		enableCors(&w)
-		log.Println("Someone Connected to /")
-		w.Write([]byte("Thanks for the req"))
-	})
+	buildHandler := http.FileServer(http.Dir("./build"))
+	http.Handle("/", buildHandler)
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		enableCors(&w)
