@@ -7,6 +7,8 @@ import (
 	"net/http"
 )
 
+const PORT = ":8081"
+
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
@@ -45,8 +47,8 @@ func main() {
 		serveWs(hub, w, r)
 	})
 
-	fmt.Println("Listening On Port: 8080")
-	err := http.ListenAndServe(":8080", nil)
+	fmt.Printf("Listening On Port: %s\n", PORT)
+	err := http.ListenAndServe(PORT, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
