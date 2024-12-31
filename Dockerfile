@@ -19,7 +19,7 @@ COPY ./server/go.mod ./server/go.sum ./
 RUN go mod download && go mod verify
 
 COPY ./server .
-COPY --from=build ./client/build .
+COPY --from=build ./client/build ./build
 RUN go build -v -o ./app
 
 EXPOSE 8080/tcp
