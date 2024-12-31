@@ -1,2 +1,2 @@
-const URL = "ws://0.0.0.0:8080/ws"
+const URL = "ws://172.21.0.2:8080/ws"
 export const socket = new WebSocket(URL)
