@@ -4,7 +4,7 @@ WORKDIR /client
 
 COPY ./client/package*.json ./
 
-RUN npm ci
+RUN npm ci --force
 
 COPY ./client .
 
