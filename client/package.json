@@ -5,6 +5,7 @@
   "dependencies": {
     "cra-template-typescript": "1.2.0",
     "react": "^19.0.0",
+    "react-camera-pro": "^1.4.0",
     "react-dom": "^19.0.0",
     "react-scripts": "5.0.1",
     "socket.io-client": "^4.8.1"
