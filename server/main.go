@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-const PORT = ":8080"
+const PORT = ":80"
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")

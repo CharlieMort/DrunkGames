@@ -10,20 +10,18 @@ COPY ./client .
 
 RUN npm run build
 
-FROM golang
-
-WORKDIR /server
-
-COPY ./server/go.mod ./server/go.sum ./
-
-RUN go mod download && go mod verify
-
+FROM golang:alpine AS build
+RUN apk --no-cache add gcc g++ make git
+WORKDIR /go/src/app
 COPY ./server .
-COPY --from=build ./client/build ./build
-RUN go build -v -o ./app
+COPY ./client/build ./build
+RUN go mod init webserver
+RUN go mod tidy
+RUN GOOS=linux go build -ldflags="-s -w" -o ./bin/web-app ./main.go
 
-EXPOSE 8080/tcp
-
-RUN ls -la
-
-CMD ["/server/app"]
+FROM alpine:3.17
+RUN apk --no-cache add ca-certificates
+WORKDIR /usr/bin
+COPY --from=build /go/src/app/bin /go/bin
+EXPOSE 80
+ENTRYPOINT /go/bin/web-app --port 80
