@@ -15,7 +15,6 @@ RUN apk --no-cache add gcc g++ make git
 WORKDIR /go/src/app
 COPY ./server .
 COPY --from=reactbuild ./client/build ./build
-RUN go mod init webserver
 RUN go mod tidy
 RUN GOOS=linux go build -ldflags="-s -w" -o ./bin/web-app ./main.go
 
