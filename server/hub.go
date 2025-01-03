@@ -148,11 +148,7 @@ func (h *Hub) SystemPacket(packet Packet) {
 
 func (h *Hub) SendToClient(packet Packet, client *Client) {
 	log.Println("Sending To Client")
-	select {
-	case client.send <- packet:
-	default:
-		h.ShutDownClient(client)
-	}
+	client.send <- packet
 }
 
 func (h *Hub) SendToRoom(packet Packet, roomCode string) {
@@ -189,6 +185,7 @@ func (h *Hub) SendPacket(packet Packet) {
 			h.SendToRoom(packet, roomCode)
 		} else {
 			client := h.GetClientFromID(packet.From)
+			log.Println("Room Does Not Exist")
 			h.SendToClient(Packet{
 				From: "0",
 				To:   client.id,
