@@ -16,7 +16,7 @@ WORKDIR /go/src/app
 COPY ./server .
 COPY --from=reactbuild ./client/build ./build
 RUN go mod tidy
-RUN GOOS=linux go build -ldflags="-s -w" -o ./bin/web-app ./main.go
+RUN GOOS=linux go build -ldflags="-s -w" -o ./bin/web-app .
 
 FROM alpine:3.17
 RUN apk --no-cache add ca-certificates
