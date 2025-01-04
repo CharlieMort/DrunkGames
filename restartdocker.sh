@@ -1,4 +1,4 @@
-docker compose -f nginx-proxy-compose down
+docker compose -f nginx-proxy-compose.yaml down
 docker compose -f go-app-compose.yaml down
 docker compose -f nginx-proxy-compose.yaml build --no-cache
 docker compose -f go-app-compose.yaml build --no-cache
