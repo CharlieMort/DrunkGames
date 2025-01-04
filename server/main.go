@@ -5,6 +5,8 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 const PORT = ":80"
@@ -35,18 +37,14 @@ func main() {
 	hub := NewHub()
 	go hub.run()
 
-	buildHandler := http.FileServer(http.Dir("./build"))
-	http.Handle("/", buildHandler)
+	r := mux.NewRouter()
 
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		enableCors(&w)
 		log.Println("Someone Connected to ws")
 		serveWs(hub, w, r)
 	})
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./build")))
 
-	fmt.Printf("Listening On Port: %s\n", PORT)
-	err := http.ListenAndServe(PORT, nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
+	http.ListenAndServe(":80", r)
 }
