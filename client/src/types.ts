@@ -1,7 +1,8 @@
 export interface IClient {
   id: string,
   roomCode: string,
-  name: string
+  name: string,
+  imguuid: string,
 }
 
 export interface IRoom {

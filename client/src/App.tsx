@@ -4,13 +4,14 @@ import RoomJoin from './comps/RoomJoin.tsx';
 import { socket } from './comps/socket.tsx';
 import { IClient, IPacket, IRoom } from './types.ts';
 import Lobby from './comps/Lobby.tsx';
-import Component from './comps/Camera.jsx';
+import Camera from './comps/Camera.jsx';
 
 function App() {
   const [isConnected, setIsConnected] = useState<boolean>(true)
   const [packet, setPacket] = useState<IPacket>()
   const [client, setClient] = useState<IClient | undefined>(undefined)
   const [room, setRoom] = useState<IRoom | undefined>(undefined)
+  const [imgUUID, setImgUUID] = useState<string>("")
 
   useEffect(() => {
     function onConnect() {
@@ -52,15 +53,14 @@ function App() {
 
   return (
     <div className="App">
-      {/* <h1>test</h1>
+      <h1>test</h1>
       {
-        isConnected
+        client !== undefined
         ? room === undefined 
             ? <RoomJoin client={client} />
             : <Lobby client={client} room={room} />
         : <h2>Waiting To Connect...</h2>
-      } */}
-      <Component />
+      }
     </div>
   );
 }

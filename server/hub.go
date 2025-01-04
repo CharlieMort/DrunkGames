@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -50,11 +49,7 @@ func (h *Hub) JoinRoom(client *Client, roomCode string) {
 		client.roomCode = roomCode
 		cJSON := make([]ClientJSON, 0)
 		for _, client := range h.rooms[roomCode] {
-			cJSON = append(cJSON, ClientJSON{
-				Name:     client.name,
-				Id:       client.id,
-				RoomCode: client.roomCode,
-			})
+			cJSON = append(cJSON, h.GetClientJSONStruct(client))
 		}
 		dat, err := json.Marshal(RoomJoinDataPacket{
 			RoomCode: roomCode,
@@ -93,28 +88,6 @@ func (h *Hub) LeaveRoom(client *Client) {
 	)
 }
 
-func (h *Hub) ShutDownClient(client *Client) {
-	log.Printf("Client Disconnected ClientID:%s\n", client.id)
-	if client.roomCode != "" {
-		h.LeaveRoom(client)
-	}
-	delete(h.clients, client)
-	close(client.send)
-}
-
-func (h *Hub) GetClientFromID(ID string) *Client {
-	for client := range h.clients {
-		if client.id == ID {
-			return client
-		}
-	}
-	return nil
-}
-
-func PrintClient(client Client) {
-	fmt.Printf("ID:%s\nName:%s\nRoomCode:%s\n", client.id, client.name, client.roomCode)
-}
-
 func (h *Hub) SystemPacket(packet Packet) {
 	log.Printf("Recieved Packet from Client From:%s\nData:%s\n", packet.From, packet.Data)
 	sysCmd := strings.SplitN(packet.Data, " ", 2)
@@ -143,12 +116,15 @@ func (h *Hub) SystemPacket(packet Packet) {
 		}
 		client.name = sysCmd[1]
 		h.SendClientJSON(client)
+	case "setclientimage":
+		client := h.GetClientFromID(packet.From)
+		if client == nil {
+			log.Printf("Client:" + packet.From + " Couldnt Be Found")
+			return
+		}
+		client.imguuid = sysCmd[1]
+		h.SendClientJSON(client)
 	}
-}
-
-func (h *Hub) SendToClient(packet Packet, client *Client) {
-	log.Println("Sending To Client")
-	client.send <- packet
 }
 
 func (h *Hub) SendToRoom(packet Packet, roomCode string) {
@@ -202,30 +178,6 @@ func (h *Hub) SendPacket(packet Packet) {
 	default:
 		log.Printf("Failed to send Packet\nFrom: %s\nTo: %s\nData: %s\n", packet.From, packet.To, packet.Data)
 	}
-}
-
-func (h *Hub) GetClientJSON(client *Client) string {
-	cJSON := ClientJSON{
-		Id:       client.id,
-		RoomCode: client.roomCode,
-		Name:     client.name,
-	}
-	dat, err := json.Marshal(cJSON)
-	if err != nil {
-		log.Println("Couldnt Parse Client JSON")
-		return ""
-	}
-	return string(dat)
-}
-
-func (h *Hub) SendClientJSON(client *Client) {
-	dat := h.GetClientJSON(client)
-	h.SendPacket(Packet{
-		From: "0",
-		To:   client.id,
-		Type: "toClient",
-		Data: dat,
-	})
 }
 
 func (h *Hub) run() {

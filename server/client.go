@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,6 +14,7 @@ type Client struct {
 	id       string
 	roomCode string // "" if not in room
 	name     string
+	imguuid  string
 	hub      *Hub
 	conn     *websocket.Conn
 	send     chan Packet
@@ -22,6 +24,64 @@ type ClientJSON struct {
 	Id       string `json:"id"`
 	RoomCode string `json:"roomCode"`
 	Name     string `json:"name"`
+	Imguuid  string `json:"imguuid"`
+}
+
+func (h *Hub) SendToClient(packet Packet, client *Client) {
+	log.Println("Sending To Client")
+	client.send <- packet
+}
+
+func (h *Hub) GetClientJSON(client *Client) string {
+	cJSON := h.GetClientJSONStruct(client)
+	dat, err := json.Marshal(cJSON)
+	if err != nil {
+		log.Println("Couldnt Parse Client JSON")
+		return ""
+	}
+	return string(dat)
+}
+
+func (h *Hub) GetClientJSONStruct(client *Client) ClientJSON {
+	cJSON := ClientJSON{
+		Id:       client.id,
+		RoomCode: client.roomCode,
+		Name:     client.name,
+		Imguuid:  client.imguuid,
+	}
+	return cJSON
+}
+
+func (h *Hub) SendClientJSON(client *Client) {
+	dat := h.GetClientJSON(client)
+	h.SendPacket(Packet{
+		From: "0",
+		To:   client.id,
+		Type: "toClient",
+		Data: dat,
+	})
+}
+
+func (h *Hub) ShutDownClient(client *Client) {
+	log.Printf("Client Disconnected ClientID:%s\n", client.id)
+	if client.roomCode != "" {
+		h.LeaveRoom(client)
+	}
+	delete(h.clients, client)
+	close(client.send)
+}
+
+func (h *Hub) GetClientFromID(ID string) *Client {
+	for client := range h.clients {
+		if client.id == ID {
+			return client
+		}
+	}
+	return nil
+}
+
+func PrintClient(client Client) {
+	fmt.Printf("ID:%s\nName:%s\nRoomCode:%s\n", client.id, client.name, client.roomCode)
 }
 
 func Chk(r *http.Request) bool {

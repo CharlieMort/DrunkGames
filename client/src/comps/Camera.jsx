@@ -1,17 +1,37 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {Camera} from "react-camera-pro";
 
-const Component = () => {
+const Cam = ({setImgUUID}) => {
   const camera = useRef(null);
-  const [image, setImage] = useState(null);
+
+  const takePhoto = () => {
+    fetch("http://localhost:80/api/upload", {
+      method: "POST",
+      body: camera.current.takePhoto(),
+      headers: {
+        "Content-type": "text/plain"
+      }
+    }).then((r) => {
+      r.text().then((uid) => setImgUUID(uid))
+    });
+  }
+
+  // useEffect(() => {
+  //   if (image != null) {
+  //     fetch(`http://localhost:80/api/image/get/${image}`, {
+  //       method: "GET"
+  //     }).then((r) => {
+  //       r.text().then((dat) => setImageData(dat))
+  //     })
+  //   }
+  // }, [image])
 
   return (
-    <div>
-      <Camera ref={camera} aspectRatio="4/3" />
-      <button style={{position: "absolute", top:"0", left:"0", zIndex: "45"}} onClick={() => setImage(camera.current.takePhoto())}>Take photo</button>
-      <img src={image} alt='Taken photo'/>
+    <div className="Camera">
+      <Camera ref={camera} aspectRatio={1} />
+      <button style={{position: "absolute", top:"0", left:"0", zIndex: "45"}} onClick={takePhoto}>Take photo</button>
     </div>
   );
 }
 
-export default Component;
+export default Cam;

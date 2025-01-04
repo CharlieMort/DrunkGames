@@ -1,6 +1,7 @@
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import { socket } from "./socket.tsx"
 import { IClient } from "../types.ts"
+import Cam from "./Camera.jsx"
 
 interface IRoomJoinProps {
     client: IClient
@@ -11,6 +12,7 @@ const RoomJoin = ({client}: IRoomJoinProps) => {
     const [nameTmp, setNameTmp] = useState<string>("")
     const [roomCode, setRoomCode] = useState<string>("")
     const [joinRoom, setJoinRoom] = useState<boolean>(false)
+    const [imgUUID, setImgUUID] = useState<string>("")
 
     const JoinRoom = () => {
         socket.send(JSON.stringify({
@@ -40,6 +42,17 @@ const RoomJoin = ({client}: IRoomJoinProps) => {
         }))
     }
 
+    useEffect(() => {
+        if (imgUUID !== "") {
+            socket.send(JSON.stringify({
+                "from": client.id,
+                "to": "",
+                "type": "toSystem",
+                "data": `setclientimage ${imgUUID}`
+            }))
+        }
+    }, [imgUUID])
+
     return (
         <div className="panel">
             {
@@ -51,16 +64,21 @@ const RoomJoin = ({client}: IRoomJoinProps) => {
                         <input className="bigButton" id="joinbutton" type="button" value="Next" onClick={SubmitName} />
                     </div>
                 </div>
-                : joinRoom
-                    ? <div className="panel-bot">
-                        <label htmlFor="roomcode">Enter the Room Code</label>
-                        <input className="bigTextInput" id="roomcode" type="text" placeholder="Room Code" value={roomCode} onChange={(e) => setRoomCode(e.target.value)} />
-                        <input className="bigButton" id="joinbutton" type="button" value="Join" onClick={JoinRoom} />
+                : client.imguuid === ""
+                    ? <div>
+                        <Cam setImgUUID={setImgUUID} />
                     </div>
-                    : <div className="panel-bot">
-                        <input className="bigButton" id="joinRoomButton" type="button" value="Join Room" onClick={() => setJoinRoom(true)} />
-                        <input className="bigButton" id="createRoomButton" type="button" value="Create Room" onClick={CreateRoom} />
-                    </div>
+                    : joinRoom
+                        ? <div className="panel-bot">
+                            <label htmlFor="roomcode">Enter the Room Code</label>
+                            <input className="bigTextInput" id="roomcode" type="text" placeholder="Room Code" value={roomCode} onChange={(e) => setRoomCode(e.target.value)} />
+                            <input className="bigButton" id="joinbutton" type="button" value="Join" onClick={JoinRoom} />
+                        </div>
+                        : <div className="panel-bot">
+                            <h1>{client.imguuid}</h1>
+                            <input className="bigButton" id="joinRoomButton" type="button" value="Join Room" onClick={() => setJoinRoom(true)} />
+                            <input className="bigButton" id="createRoomButton" type="button" value="Create Room" onClick={CreateRoom} />
+                        </div>
             }
         </div>
     )

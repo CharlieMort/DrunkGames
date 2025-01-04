@@ -60,3 +60,14 @@ body {
     font-size: 1.5rem;
     margin: 1rem;
 }
+
+.Photo, .Camera video {
+    width: 250px;
+    height: 250px;
+    aspect-ratio: 1;
+}
+
+.lobby {
+    display: flex;
+    flex-wrap: wrap;
+}
