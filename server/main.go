@@ -50,7 +50,7 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uid := uuid.New().String()
-	fileName := "go/build/images/" + uid + ".jpeg"
+	fileName := "go/bin/images/" + uid + ".jpeg"
 	f, err := os.Create(fileName)
 	if err != nil {
 		log.Printf("E1 %s", err.Error())
