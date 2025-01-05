@@ -72,6 +72,9 @@ func (c *Client) UpdateNonVitals(oC *Client) {
 
 func (h *Hub) ClientDisconnect(client *Client) {
 	h.clients[client] = false
+	if client.roomCode != "" {
+		client.roomCode = h.LeaveRoom(client)
+	}
 }
 
 func (h *Hub) ShutDownClient(client *Client) {

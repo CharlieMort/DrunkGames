@@ -18,7 +18,7 @@ const RemoteImage = ({uuid}: IRemoteImageProps) => {
     }, [])
 
     return(
-        <img className="Photo" src={imageData===""?null:imageData} alt='Taken photo'/>
+        <img className="Photo" src={imageData===""?undefined:imageData} alt='Taken photo'/>
     )
 }
 

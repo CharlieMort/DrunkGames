@@ -85,6 +85,7 @@ func (h *Hub) CreateRoom() string {
 }
 
 func (h *Hub) JoinRoom(client *Client, roomCode string) {
+	roomCode = strings.ToLower(roomCode)
 	if _, ok := h.rooms[roomCode]; ok {
 		if h.rooms[roomCode].Host == nil {
 			h.rooms[roomCode].Host = client
@@ -105,9 +106,13 @@ func (h *Hub) JoinRoom(client *Client, roomCode string) {
 	}
 }
 
-func (h *Hub) LeaveRoom(client *Client) {
+func (h *Hub) LeaveRoom(client *Client) string {
 	log.Println("Removing From Room " + client.roomCode)
 	rIdx := slices.Index(h.rooms[client.roomCode].Clients, client)
+	if rIdx == -1 {
+		return ""
+	}
+	rc := client.roomCode
 	h.rooms[client.roomCode].Clients = slices.Delete(
 		h.rooms[client.roomCode].Clients,
 		rIdx,
@@ -118,13 +123,14 @@ func (h *Hub) LeaveRoom(client *Client) {
 		if len(h.rooms[client.roomCode].Clients) == 0 {
 			delete(h.rooms, client.roomCode)
 			client.roomCode = ""
-			return
+			return rc
 		} else {
 			h.rooms[client.roomCode].Host = h.rooms[client.roomCode].Clients[0]
 		}
 	}
 	h.SendRoomUpdate(client.roomCode)
 	client.roomCode = ""
+	return rc
 }
 
 func (h *Hub) SendRoomUpdate(roomCode string) {
