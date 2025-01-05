@@ -98,7 +98,10 @@ function App() {
           : settings.game === undefined
             ? <Lobby client={settings.client} room={settings.room} />
             : <GameRouter room={settings.room} gameData={settings.game} />
-        : <h2>Waiting To Connect...</h2>
+        : <div>
+            <h2>Waiting To Connect...</h2>
+            <button onClick={() => Reconnect()}>ReConnect</button>
+          </div>
       }
     </div>
   );
