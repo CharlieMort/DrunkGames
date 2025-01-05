@@ -99,12 +99,14 @@ type spaHandler struct {
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Join internally call path.Clean to prevent directory traversal
 	path := filepath.Join(h.staticPath, r.URL.Path)
-	log.Printf("URL: %s outPATH: %s", r.URL.Path, path)
+	indexPath := filepath.Join(h.staticPath, h.indexPath)
+	log.Printf("URL: %s outPATH: %s indexPath:%s\n", r.URL.Path, path, indexPath)
 	// check whether a file exists or is a directory at the given path
 	fi, err := os.Stat(path)
 	if os.IsNotExist(err) || fi.IsDir() {
 		// file does not exist or path is a directory, serve index.html
-		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
+		log.Println("FILE DONT EXIST")
+		http.ServeFile(w, r, indexPath)
 		return
 	}
 
