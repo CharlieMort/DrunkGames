@@ -14,6 +14,7 @@ function App() {
     room: undefined,
     game: undefined,
   })
+  const [x, sX] = useState(0)
 
   useEffect(() => {
     if (sessionStorage.tabID == undefined) {
@@ -48,6 +49,10 @@ function App() {
       console.log(JSON.parse(pkt.data))
       setPacket(JSON.parse(pkt.data))
     }
+
+    setInterval(() => {
+      sX(x+1)
+    }, 2000)
 
     console.log("Setting Handlers")
     socket.onopen = onConnect
@@ -93,9 +98,6 @@ function App() {
             : <GameRouter room={settings.room} gameData={settings.game} />
         : <h2>Waiting To Connect...</h2>
       }
-      <iframe style={{height:0,width:0,visibility:"hidden"}} src="about:blank">
-        this frame prevents back forward cache
-    </iframe>
     </div>
   );
 }
