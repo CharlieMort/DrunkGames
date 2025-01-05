@@ -50,7 +50,7 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uid := uuid.New().String()
-	fileName := "go/bin/images/" + uid + ".jpeg"
+	fileName := "/go/bin/images/" + uid + ".jpeg"
 	f, err := os.Create(fileName)
 	if err != nil {
 		log.Printf("E1 %s", err.Error())
@@ -75,7 +75,7 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	vars := mux.Vars(r)
 
-	f, err := os.ReadFile("go/bin/images/" + vars["uuid"] + ".jpeg")
+	f, err := os.ReadFile("/go/bin/images/" + vars["uuid"] + ".jpeg")
 	if err != nil {
 		log.Println("Fialed Reading FIle")
 		log.Println(err)
