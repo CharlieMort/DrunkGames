@@ -23,5 +23,5 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /usr/bin
 COPY --from=build /go/src/app/bin /go/bin
 COPY --from=reactbuild ./client/build /go/bin/build
-EXPOSE 443
+EXPOSE 80
 ENTRYPOINT /go/bin/web-app
