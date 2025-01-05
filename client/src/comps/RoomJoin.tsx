@@ -58,7 +58,6 @@ const RoomJoin = ({client}: IRoomJoinProps) => {
             {
                 name === "" && client.name === ""
                 ? <div>
-                    <h1>{sessionStorage.tabID}</h1>
                     <div className="panel-bot">
                         <label htmlFor="username">Enter Your Name</label>
                         <input className="bigTextInput" id="username" type="text" placeholder="Your Name" value={nameTmp} onChange={(e) => setNameTmp(e.target.value)}/>

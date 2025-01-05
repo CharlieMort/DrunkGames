@@ -83,7 +83,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>test</h1>
+      <h1>🍺BigPint.com</h1>
       {
         settings.client !== undefined && isConnected
         ? settings.room === undefined 
