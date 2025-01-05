@@ -93,6 +93,9 @@ function App() {
             : <GameRouter room={settings.room} gameData={settings.game} />
         : <h2>Waiting To Connect...</h2>
       }
+      <iframe style={{height:0,width:0,visibility:"hidden"}} src="about:blank">
+        this frame prevents back forward cache
+    </iframe>
     </div>
   );
 }
