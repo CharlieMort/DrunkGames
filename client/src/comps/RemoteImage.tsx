@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import { API_URL } from "./socket"
+import { API_URL } from "./socket.tsx"
 
 interface IRemoteImageProps {
     uuid: string

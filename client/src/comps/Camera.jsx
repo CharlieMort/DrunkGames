@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import {Camera} from "react-camera-pro";
-import { API_URL } from "./socket";
+import { API_URL } from "./socket.tsx";
 
 const Cam = ({setImgUUID}) => {
   const camera = useRef(null);
