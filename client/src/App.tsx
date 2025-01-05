@@ -18,6 +18,10 @@ function App() {
   useEffect(() => {
     function onConnect() {
       console.log("CONNECTED")
+      if (sessionStorage.tabID == undefined) {
+        sessionStorage.tabID = crypto.randomUUID()
+      }
+      console.log(sessionStorage.tabID)
       setIsConnected(true)
     }
 

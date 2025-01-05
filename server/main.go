@@ -16,6 +16,7 @@ import (
 )
 
 const PORT = ":80"
+const DEBUG = false
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -50,7 +51,12 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uid := uuid.New().String()
-	fileName := "/go/bin/images/" + uid + ".jpeg"
+	var fileName string
+	if DEBUG {
+		fileName = "./images/" + uid + ".jpeg"
+	} else {
+		fileName = "/go/bin/images/" + uid + ".jpeg"
+	}
 	f, err := os.Create(fileName)
 	if err != nil {
 		log.Printf("E1 %s", err.Error())
@@ -75,7 +81,13 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	vars := mux.Vars(r)
 
-	f, err := os.ReadFile("/go/bin/images/" + vars["uuid"] + ".jpeg")
+	var fileName string
+	if DEBUG {
+		fileName = "./images/" + vars["uuid"] + ".jpeg"
+	} else {
+		fileName = "/go/bin/images/" + vars["uuid"] + ".jpeg"
+	}
+	f, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Println("Fialed Reading FIle")
 		log.Println(err)
