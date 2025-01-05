@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const PORT = ":80"
+const PORT = ":443"
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
