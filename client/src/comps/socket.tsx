@@ -1,2 +1,3 @@
-const URL = "ws://localhost:80/ws" //192.168.0.216
+const URL = "ws://192.168.0.216:80/ws" //
+export const API_URL = "http://192.168.0.216"
 export const socket = new WebSocket(URL)

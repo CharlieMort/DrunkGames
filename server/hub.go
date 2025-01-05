@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -16,10 +17,24 @@ type Packet struct {
 
 type Hub struct {
 	clients    map[*Client]bool
-	rooms      map[string][]*Client
+	rooms      map[string]*Room
 	broadcast  chan Packet
 	register   chan *Client
 	unregister chan *Client
+}
+
+type Room struct {
+	RoomCode string    `json:"roomCode"`
+	Host     *Client   `json:"host"`
+	Game     Game      `json:"game"`
+	Clients  []*Client `json:"clients"`
+}
+
+type RoomJSON struct {
+	RoomCode string       `json:"roomCode"`
+	Host     ClientJSON   `json:"host"`
+	Clients  []ClientJSON `json:"clients"`
+	GameType string       `json:"gameType"`
 }
 
 func NewHub() *Hub {
@@ -28,44 +43,31 @@ func NewHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
-		rooms:      make(map[string][]*Client),
+		rooms:      make(map[string]*Room),
 	}
 }
 
 func (h *Hub) CreateRoom() string {
 	roomCode := GetRandomRoomCode()
-	h.rooms[roomCode] = make([]*Client, 0)
+	h.rooms[roomCode] = &Room{
+		RoomCode: roomCode,
+		Host:     nil,
+		Game:     nil,
+		Clients:  make([]*Client, 0),
+	}
 	log.Printf("Created The Room:%s\n", roomCode)
 	return roomCode
 }
 
 func (h *Hub) JoinRoom(client *Client, roomCode string) {
-	type RoomJoinDataPacket struct {
-		RoomCode string       `json:"roomCode"`
-		Clients  []ClientJSON `json:"clients"`
-	}
 	if _, ok := h.rooms[roomCode]; ok {
-		h.rooms[roomCode] = append(h.rooms[roomCode], client)
+		if h.rooms[roomCode].Host == nil {
+			h.rooms[roomCode].Host = client
+		}
+		h.rooms[roomCode].Clients = append(h.rooms[roomCode].Clients, client)
 		client.roomCode = roomCode
-		cJSON := make([]ClientJSON, 0)
-		for _, client := range h.rooms[roomCode] {
-			cJSON = append(cJSON, h.GetClientJSONStruct(client))
-		}
-		dat, err := json.Marshal(RoomJoinDataPacket{
-			RoomCode: roomCode,
-			Clients:  cJSON,
-		})
-		if err != nil {
-			log.Println("Error Creating RoomJoinDataPacket")
-		}
-
 		h.SendClientJSON(client)
-		h.SendPacket(Packet{
-			From: "0",
-			To:   roomCode,
-			Type: "toRoom",
-			Data: string(dat),
-		})
+		h.SendRoomUpdate(roomCode)
 		log.Printf("Client:%s Joined the Room:%s", client.id, roomCode)
 	} else {
 		h.SendPacket(Packet{
@@ -80,17 +82,57 @@ func (h *Hub) JoinRoom(client *Client, roomCode string) {
 
 func (h *Hub) LeaveRoom(client *Client) {
 	log.Println("Removing From Room " + client.roomCode)
-	rIdx := slices.Index(h.rooms[client.roomCode], client)
-	h.rooms[client.roomCode] = slices.Delete(
-		h.rooms[client.roomCode],
+	rIdx := slices.Index(h.rooms[client.roomCode].Clients, client)
+	h.rooms[client.roomCode].Clients = slices.Delete(
+		h.rooms[client.roomCode].Clients,
 		rIdx,
 		rIdx+1,
 	)
+	if h.rooms[client.roomCode].Host == client {
+		h.rooms[client.roomCode].Host = nil
+		if len(h.rooms[client.roomCode].Clients) == 0 {
+			delete(h.rooms, client.roomCode)
+			client.roomCode = ""
+			return
+		} else {
+			h.rooms[client.roomCode].Host = h.rooms[client.roomCode].Clients[0]
+		}
+	}
+	h.SendRoomUpdate(client.roomCode)
+	client.roomCode = ""
+}
+
+func (h *Hub) SendRoomUpdate(roomCode string) {
+	cJSON := make([]ClientJSON, 0)
+	for _, client := range h.rooms[roomCode].Clients {
+		cJSON = append(cJSON, h.GetClientJSONStruct(client))
+	}
+	gType := ""
+	if h.rooms[roomCode].Game != nil {
+		gType = h.rooms[roomCode].Game.GetType()
+	}
+	fmt.Println(gType)
+	dat, err := json.Marshal(RoomJSON{
+		RoomCode: roomCode,
+		Host:     h.GetClientJSONStruct(h.rooms[roomCode].Host),
+		Clients:  cJSON,
+		GameType: gType,
+	})
+	if err != nil {
+		log.Println("Error Creating RoomJoinDataPacket")
+	}
+
+	h.SendPacket(Packet{
+		From: "0",
+		To:   roomCode,
+		Type: "toRoom",
+		Data: string(dat),
+	})
 }
 
 func (h *Hub) SystemPacket(packet Packet) {
 	log.Printf("Recieved Packet from Client From:%s\nData:%s\n", packet.From, packet.Data)
-	sysCmd := strings.SplitN(packet.Data, " ", 2)
+	sysCmd := strings.Split(packet.Data, " ")
 	switch sysCmd[0] {
 	case "createroom":
 		client := h.GetClientFromID(packet.From)
@@ -114,7 +156,7 @@ func (h *Hub) SystemPacket(packet Packet) {
 			log.Printf("Client:" + packet.From + " Couldnt Be Found")
 			return
 		}
-		client.name = sysCmd[1]
+		client.name = strings.SplitN(packet.Data, " ", 2)[1]
 		h.SendClientJSON(client)
 	case "setclientimage":
 		client := h.GetClientFromID(packet.From)
@@ -124,12 +166,30 @@ func (h *Hub) SystemPacket(packet Packet) {
 		}
 		client.imguuid = sysCmd[1]
 		h.SendClientJSON(client)
+	case "startgame":
+		roomCode := sysCmd[2]
+		switch sysCmd[1] {
+		case "spygame":
+			log.Println("Startup SpyGame")
+			h.rooms[roomCode].Game = &SpyGame{
+				Stage:         0,
+				Hub:           h,
+				Room:          h.rooms[roomCode],
+				Spies:         make([]*Client, 0),
+				Prompt:        "",
+				ReadyCount:    0,
+				QuestionOrder: make([]*Client, 0),
+				Votes:         make(map[int]int),
+				Dead:          make([]*Client, 0),
+			}
+		}
+		h.rooms[roomCode].Game.StartGame()
 	}
 }
 
 func (h *Hub) SendToRoom(packet Packet, roomCode string) {
 	log.Println("Sending To Room")
-	for _, client := range h.rooms[roomCode] {
+	for _, client := range h.rooms[roomCode].Clients {
 		h.SendToClient(packet, client)
 	}
 }
@@ -155,7 +215,7 @@ func (h *Hub) SendPacket(packet Packet) {
 	case "toClient", "error":
 		client := h.GetClientFromID(packet.To)
 		h.SendToClient(packet, client)
-	case "toRoom":
+	case "toRoom", "toGame":
 		roomCode := packet.To
 		if _, ok := h.rooms[roomCode]; ok {
 			h.SendToRoom(packet, roomCode)

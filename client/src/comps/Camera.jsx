@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import {Camera} from "react-camera-pro";
+import { API_URL } from "./socket";
 
 const Cam = ({setImgUUID}) => {
   const camera = useRef(null);
 
   const takePhoto = () => {
-    fetch("http://localhost:80/api/upload", {
+    fetch(`${API_URL}/api/upload`, {
       method: "POST",
       body: camera.current.takePhoto(),
       headers: {

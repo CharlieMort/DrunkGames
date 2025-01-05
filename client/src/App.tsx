@@ -2,16 +2,18 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import RoomJoin from './comps/RoomJoin.tsx';
 import { socket } from './comps/socket.tsx';
-import { IClient, IPacket, IRoom } from './types.ts';
+import { IClient, IPacket, IRoom, ISettings, ISpyGame } from './types.ts';
 import Lobby from './comps/Lobby.tsx';
-import Camera from './comps/Camera.jsx';
+import GameRouter from './comps/GameRouter.tsx';
 
 function App() {
   const [isConnected, setIsConnected] = useState<boolean>(true)
   const [packet, setPacket] = useState<IPacket>()
-  const [client, setClient] = useState<IClient | undefined>(undefined)
-  const [room, setRoom] = useState<IRoom | undefined>(undefined)
-  const [imgUUID, setImgUUID] = useState<string>("")
+  const [settings, setSettings] = useState<ISettings>({
+    client: undefined,
+    room: undefined,
+    game: undefined,
+  })
 
   useEffect(() => {
     function onConnect() {
@@ -25,7 +27,6 @@ function App() {
     }
 
     function onNewPacket(pkt) {
-      console.log(pkt.data)
       setPacket(JSON.parse(pkt.data))
     }
 
@@ -36,29 +37,51 @@ function App() {
   }, [])
 
   useEffect(() => {
-    console.log(packet)
-    if (packet !== undefined) {
-      switch(packet.type) {
-        case "toClient":
-          setClient(JSON.parse(packet.data))
-          console.log(JSON.parse(packet.data))
-          break
-        case "toRoom":
-          setRoom(JSON.parse(packet.data))
-          console.log(JSON.parse(packet.data))
-          break;
-      }
+    if (packet === undefined) {
+      return
     }
+    console.log("SETTINGS______________________________________________")
+    console.log(settings)
+    let newSetting = {...settings}
+
+    switch(packet.type) {
+      case "toClient":
+        console.log("toClient")
+        newSetting.client = JSON.parse(packet.data)
+        break
+      case "toRoom":
+        console.log("toRoom")
+        newSetting.room = JSON.parse(packet.data)
+        break;
+      case "toGame":
+        console.log("toGame")
+        newSetting.game = JSON.parse(packet.data)
+        break
+    }
+    console.log("NEWSETTING______________________________________________________________")
+    console.log(newSetting)
+    setSettings({...newSetting})
   }, [packet])
+
+  useEffect(() => {
+    console.log("ROOM_____________________________________")
+    console.log(settings.room)
+    console.log("CLIENT__________________________________________")
+    console.log(settings.client)
+    console.log("GAME_____________________________________________")
+    console.log(settings.game)
+  }, [settings])
 
   return (
     <div className="App">
       <h1>test</h1>
       {
-        client !== undefined
-        ? room === undefined 
-            ? <RoomJoin client={client} />
-            : <Lobby client={client} room={room} />
+        settings.client !== undefined && isConnected
+        ? settings.room === undefined 
+          ? <RoomJoin client={settings.client} />
+          : settings.game === undefined
+            ? <Lobby client={settings.client} room={settings.room} />
+            : <GameRouter room={settings.room} gameData={settings.game} />
         : <h2>Waiting To Connect...</h2>
       }
     </div>

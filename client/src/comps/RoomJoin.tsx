@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react"
 import { socket } from "./socket.tsx"
-import { IClient } from "../types.ts"
+import { IClient, IPacket } from "../types.ts"
 import Cam from "./Camera.jsx"
 
 interface IRoomJoinProps {
@@ -16,40 +16,40 @@ const RoomJoin = ({client}: IRoomJoinProps) => {
 
     const JoinRoom = () => {
         socket.send(JSON.stringify({
-            "from": client.id,
-            "to": "0",
-            "type": "toSystem",
-            "data": "joinroom "+roomCode
-        }))
+            from: client.id,
+            to: "0",
+            type: "toSystem",
+            data: `joinroom ${roomCode}` 
+        } as IPacket))
     }
 
     const SubmitName = () => {
         setName(nameTmp)
         socket.send(JSON.stringify({
-            "from": client.id,
-            "to": "0",
-            "type": "toSystem",
-            "data": "setclientname "+nameTmp  
-        }))
+            from: client.id,
+            to: "0",
+            type: "toSystem",
+            data: `setclientname ${nameTmp}` 
+        } as IPacket))
     }
 
     const CreateRoom = () => {
         socket.send(JSON.stringify({
-            "from": client.id,
-            "to": "",
-            "type": "toSystem",
-            "data": "createroom"
-        }))
+            from: client.id,
+            to: "",
+            type: "toSystem",
+            data: "createroom"
+        }  as IPacket))
     }
 
     useEffect(() => {
         if (imgUUID !== "") {
             socket.send(JSON.stringify({
-                "from": client.id,
-                "to": "",
-                "type": "toSystem",
-                "data": `setclientimage ${imgUUID}`
-            }))
+                from: client.id,
+                to: "",
+                type: "toSystem",
+                data: `setclientimage ${imgUUID}`
+            } as IPacket))
         }
     }, [imgUUID])
 
