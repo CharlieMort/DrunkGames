@@ -136,7 +136,7 @@ func main() {
 		log.Println("Someone Connected to ws")
 		serveWs(hub, w, r)
 	})
-	spa := spaHandler{staticPath: "./build", indexPath: "index.html"}
+	spa := spaHandler{staticPath: "go/bin/build", indexPath: "index.html"}
 	r.PathPrefix("/").Handler(spa)
 
 	http.ListenAndServe(PORT, r)
