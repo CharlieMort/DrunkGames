@@ -6,11 +6,13 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
+	tabID    string
 	id       string
 	roomCode string // "" if not in room
 	name     string
@@ -62,6 +64,16 @@ func (h *Hub) SendClientJSON(client *Client) {
 	})
 }
 
+func (c *Client) UpdateNonVitals(oC *Client) {
+	c.roomCode = oC.roomCode
+	c.name = oC.name
+	c.imguuid = oC.imguuid
+}
+
+func (h *Hub) ClientDisconnect(client *Client) {
+	h.clients[client] = false
+}
+
 func (h *Hub) ShutDownClient(client *Client) {
 	log.Printf("Client Disconnected ClientID:%s\n", client.id)
 	if client.roomCode != "" {
@@ -94,6 +106,7 @@ var upgrader = websocket.Upgrader{
 
 func (c *Client) ReadPackets() {
 	defer func() {
+		log.Println("Fuck Off Read my ASS packet")
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
@@ -108,8 +121,23 @@ func (c *Client) ReadPackets() {
 		}
 		var packet Packet
 		err = json.Unmarshal(packetJson, &packet)
+		log.Println("Received Packet From Client")
 		if err != nil {
 			log.Printf("Error ReadPackets(1) %v", err)
+		}
+		if packet.Type == "setup" {
+			sysCmd := strings.Split(packet.Data, " ")
+			switch sysCmd[0] {
+			case "clientconnect":
+				if c.hub.ClientExists(sysCmd[1]) {
+					c.hub.ClientRejoin(sysCmd[1], c)
+				} else {
+					log.Println("New Client " + sysCmd[1])
+					c.tabID = sysCmd[1]
+					c.hub.SendClientJSON(c)
+				}
+			}
+			continue
 		}
 		c.hub.broadcast <- packet
 	}
@@ -132,7 +160,7 @@ func (c *Client) WritePackets() {
 			err := c.conn.WriteJSON(packet)
 			if err != nil {
 				log.Println("Error WritePackets(1)")
-				log.Fatal(err)
+				log.Println(err)
 			}
 		}
 	}
@@ -145,7 +173,13 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("New Client Joined - ClientID:%s\n", strconv.Itoa(nextClientID))
-	client := &Client{id: strconv.Itoa(nextClientID), roomCode: "", hub: hub, conn: conn, send: make(chan Packet)}
+	client := &Client{
+		id:       strconv.Itoa(nextClientID),
+		roomCode: "",
+		hub:      hub,
+		conn:     conn,
+		send:     make(chan Packet),
+	}
 	nextClientID += 1
 	client.hub.register <- client
 

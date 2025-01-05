@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import RoomJoin from './comps/RoomJoin.tsx';
-import { socket } from './comps/socket.tsx';
+import { Reconnect, socket } from './comps/socket.tsx';
 import { IClient, IPacket, IRoom, ISettings, ISpyGame } from './types.ts';
 import Lobby from './comps/Lobby.tsx';
 import GameRouter from './comps/GameRouter.tsx';
@@ -16,36 +16,50 @@ function App() {
   })
 
   useEffect(() => {
+    if (sessionStorage.tabID == undefined) {
+      sessionStorage.tabID = crypto.randomUUID()
+    }
+    console.log(sessionStorage.tabID)
+
     function onConnect() {
       console.log("CONNECTED")
-      if (sessionStorage.tabID == undefined) {
-        sessionStorage.tabID = crypto.randomUUID()
-      }
-      console.log(sessionStorage.tabID)
+      socket.send(JSON.stringify({
+        from: "0",
+        to: "0",
+        type: "setup",
+        data: `clientconnect ${sessionStorage.tabID}`
+      } as IPacket))
       setIsConnected(true)
     }
 
-    function onDisconnect() {
+    function onDisconnect(e) {
       console.log("DISCONNECTED")
+      console.log(e)
       setIsConnected(false)
+      //Reconnect()
+    }
+
+    function onError(e) {
+      console.log("ERROR")
+      console.log(e)
     }
 
     function onNewPacket(pkt) {
+      console.log(JSON.parse(pkt.data))
       setPacket(JSON.parse(pkt.data))
     }
 
     console.log("Setting Handlers")
     socket.onopen = onConnect
+    socket.onerror = onError
     socket.onclose = onDisconnect
     socket.onmessage = onNewPacket
   }, [])
 
   useEffect(() => {
-    if (packet === undefined) {
+    if (packet === undefined || packet.type === "error") {
       return
     }
-    console.log("SETTINGS______________________________________________")
-    console.log(settings)
     let newSetting = {...settings}
 
     switch(packet.type) {
@@ -66,15 +80,6 @@ function App() {
     console.log(newSetting)
     setSettings({...newSetting})
   }, [packet])
-
-  useEffect(() => {
-    console.log("ROOM_____________________________________")
-    console.log(settings.room)
-    console.log("CLIENT__________________________________________")
-    console.log(settings.client)
-    console.log("GAME_____________________________________________")
-    console.log(settings.game)
-  }, [settings])
 
   return (
     <div className="App">

@@ -56,7 +56,7 @@ const RoomJoin = ({client}: IRoomJoinProps) => {
     return (
         <div className="panel">
             {
-                name === ""
+                name === "" && client.name === ""
                 ? <div>
                     <h1>{sessionStorage.tabID}</h1>
                     <div className="panel-bot">

@@ -47,6 +47,31 @@ func NewHub() *Hub {
 	}
 }
 
+func (h *Hub) ClientExists(tabID string) bool {
+	for cl := range h.clients {
+		if cl.tabID == tabID && cl.tabID != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *Hub) ClientRejoin(tabID string, currClient *Client) {
+	for cl := range h.clients {
+		if cl.tabID == tabID {
+			log.Printf("Client Rejoined - MV: %s -> %s\n", currClient.id, cl.id)
+			//h.ShutDownClient(currClient)
+			currClient.UpdateNonVitals(cl)
+			h.SendClientJSON(currClient)
+			log.Println(currClient.roomCode)
+			if currClient.roomCode != "" {
+				h.JoinRoom(currClient, currClient.roomCode)
+				h.LeaveRoom(cl)
+			}
+		}
+	}
+}
+
 func (h *Hub) CreateRoom() string {
 	roomCode := GetRandomRoomCode()
 	h.rooms[roomCode] = &Room{
@@ -131,7 +156,7 @@ func (h *Hub) SendRoomUpdate(roomCode string) {
 }
 
 func (h *Hub) SystemPacket(packet Packet) {
-	log.Printf("Recieved Packet from Client From:%s\nData:%s\n", packet.From, packet.Data)
+	log.Printf("Recieved Packet from Client\nFrom:%s\nData:%s\n", packet.From, packet.Data)
 	sysCmd := strings.Split(packet.Data, " ")
 	switch sysCmd[0] {
 	case "createroom":
@@ -212,6 +237,9 @@ func (h *Hub) SendToAll(packet Packet) {
 
 func (h *Hub) SendPacket(packet Packet) {
 	switch packet.Type {
+	case "clientUpdate":
+		client := h.GetClientFromID(packet.To)
+		h.SendClientJSON(client)
 	case "toClient", "error":
 		client := h.GetClientFromID(packet.To)
 		h.SendToClient(packet, client)
@@ -245,10 +273,10 @@ func (h *Hub) run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
-			h.SendClientJSON(client)
 		case client := <-h.unregister:
+			log.Println("The Cunt disconnected")
 			if _, ok := h.clients[client]; ok {
-				h.ShutDownClient(client)
+				h.ClientDisconnect(client)
 			}
 		case packet := <-h.broadcast:
 			h.SendPacket(packet)

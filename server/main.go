@@ -16,7 +16,7 @@ import (
 )
 
 const PORT = ":80"
-const DEBUG = false
+const DEBUG = true
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
