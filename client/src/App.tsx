@@ -50,8 +50,9 @@ function App() {
       setPacket(JSON.parse(pkt.data))
     }
 
-    setInterval(() => {
+    const refreshInt = setInterval(() => {
       sX(x+1)
+      console.log("cum")
     }, 2000)
 
     console.log("Setting Handlers")
@@ -59,6 +60,7 @@ function App() {
     socket.onerror = onError
     socket.onclose = onDisconnect
     socket.onmessage = onNewPacket
+    return () => clearInterval(refreshInt);
   }, [])
 
   useEffect(() => {
