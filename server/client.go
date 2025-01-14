@@ -107,6 +107,15 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: Chk,
 }
 
+func (c *Client) SendHeatbeat() {
+	c.hub.SendPacket(Packet{
+		From: "0",
+		To:   c.id,
+		Type: "heartbeat",
+		Data: "",
+	})
+}
+
 func (c *Client) ReadPackets() {
 	defer func() {
 		log.Println("Fuck Off Read my ASS packet")
@@ -140,6 +149,10 @@ func (c *Client) ReadPackets() {
 					c.hub.SendClientJSON(c)
 				}
 			}
+			continue
+		}
+		if packet.Type == "heartbeat" {
+			c.SendHeatbeat()
 			continue
 		}
 		c.hub.broadcast <- packet

@@ -70,9 +70,28 @@ function App() {
     let newSetting = {...settings}
 
     switch(packet.type) {
+      case "heartbeat":
+        setTimeout(() => {
+          socket.send(JSON.stringify({
+            from: settings.client?.id,
+            to: "0",
+            type: "heartbeat",
+            data: "" 
+        } as IPacket))
+        }, 500)
+        break
       case "toClient":
         console.log("toClient")
         newSetting.client = JSON.parse(packet.data)
+        if (settings.client === undefined && newSetting.client !== undefined) {
+          console.log(packet.to)
+          socket.send(JSON.stringify({
+            from: "",
+            to: packet.to,
+            type: "heartbeat",
+            data: "" 
+          } as IPacket))
+        }
         break
       case "toRoom":
         console.log("toRoom")

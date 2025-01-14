@@ -243,18 +243,31 @@ func (h *Hub) SendToAll(packet Packet) {
 
 func (h *Hub) SendPacket(packet Packet) {
 	switch packet.Type {
+	case "heartbeat":
+		log.Printf("HES ALIVE %s", packet.To)
+		client := h.GetClientFromID(packet.To)
+		if client != nil {
+			h.SendToClient(packet, client)
+		}
 	case "clientUpdate":
 		client := h.GetClientFromID(packet.To)
-		h.SendClientJSON(client)
+		if client != nil {
+			h.SendClientJSON(client)
+		}
 	case "toClient", "error":
 		client := h.GetClientFromID(packet.To)
-		h.SendToClient(packet, client)
+		if client != nil {
+			h.SendToClient(packet, client)
+		}
 	case "toRoom", "toGame":
 		roomCode := packet.To
 		if _, ok := h.rooms[roomCode]; ok {
 			h.SendToRoom(packet, roomCode)
 		} else {
 			client := h.GetClientFromID(packet.From)
+			if client == nil {
+				break
+			}
 			log.Println("Room Does Not Exist")
 			h.SendToClient(Packet{
 				From: "0",
